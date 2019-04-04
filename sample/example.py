@@ -17,7 +17,7 @@ f=fptreemining.fptreemining(saveimg=True,saveto='C:/set')
 #items:样本的特征项,facts:样本,threshold:最小支持度
 f.mine(items=sample.items,facts=sample.sample,threshold=3)
 f.showfset()
-print('Hello world!')
+print('Hello world!') #测试展示语句Hello world
 
 
 
