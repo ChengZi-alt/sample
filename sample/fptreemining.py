@@ -4,6 +4,7 @@ from treebuilder import treebuilder
 from cpbtreebuilder import cpbtreebuilder
 from util import util
 from drawtree import drawtree
+import connect_db
 
 class fptreemining:
     def __init__(self,saveimg=False,saveto=None):
@@ -17,7 +18,12 @@ class fptreemining:
     def mine(self,facts,items,threshold):
         root=treebuilder(items,facts)
         print('所有特征项及其频度',root.itemcount)
-        self.drawtool.saveimg(root.tree,self.saveto,'Root.jpg',title=None)
+        connect_db.LoadData("tmp", "delete from tmp.subclass_degree_base")
+        for key , values in root.itemcount.items():
+            #print(key,values)
+            #print('insert into tmp.subclass_degree_base(subclass_id,subclass_num) values('+key+','+str(values)+')')
+            connect_db.LoadData("tmp","insert into tmp.subclass_degree_base(subclass_id,subclass_num) values ('%s', '%s')" % (key,str(values)))
+        #self.drawtool.saveimg(root.tree,self.saveto,'Root.jpg',title=None)
         self.multipathhandler(None,root,threshold)
 
     def gettreebuilder(self,facts,items):
@@ -98,17 +104,17 @@ class fptreemining:
             cpb_facts=tb.tree.getCPB(tb.itemtable[newitem])
             cpb=cpbtreebuilder(cpb_facts)
             cpb_tree=cpb.tree
-            if self.drawtool:
-                title='-'.join(item)+"_cpb tree"
-                filename=title+".jpg"
-                self.drawtool.saveimg(cpb_tree,self.saveto,filename,title=title)
-            if item == ('milk','eggs'):
-                ddd=1
-            pathcount=self.checksinglepathtree(cpb_tree,threshold)
-            if pathcount>1:
-                self.multipathhandler(item,cpb,threshold)
-            if pathcount==1:
-                self.singlepathhandler(item,cpb,threshold)
+            # if self.drawtool:
+            #     title='-'.join(item)+"_cpb tree"
+            #     filename=title+".jpg"
+            #     self.drawtool.saveimg(cpb_tree,self.saveto,filename,title=title)
+            # if item == ('milk','eggs'):
+            #     ddd=1
+            # pathcount=self.checksinglepathtree(cpb_tree,threshold)
+            # if pathcount>1:
+            #     self.multipathhandler(item,cpb,threshold)
+            # if pathcount==1:
+            #     self.singlepathhandler(item,cpb,threshold)
             self.unionhandler(item,cpb,threshold)
 
     def getcombineoflist(self,nodepairs):
@@ -128,5 +134,17 @@ class fptreemining:
     #对挖掘结果排序显示
     def showfset(self):
         rankkeys=sorted(self.fsetdict.keys(),key= lambda k:self.fsetdict[k],reverse=True)
-        for key in rankkeys:
-            print(key,self.fsetdict[key])
+        # for key in rankkeys:
+            # print(key,self.fsetdict[key])
+        file = open('new.txt', 'w', encoding='utf-8')  # new modify
+        connect_db.LoadData("tmp", "truncate table  tmp.subclass_rela_base")
+        for key in rankkeys:     # new modify
+            # file.write("{},{}\n".format(key,self.fsetdict[key])) # modify  把存放到文件
+            tuple1= tuple(key)
+            str1 = ''
+            for i in range(len(tuple1)):
+               # print(tuple1[i])
+                str1 = str1+','+tuple1[i]
+            #print(str1)
+            connect_db.LoadData("tmp","insert into tmp.subclass_rela_base(subclass_id,subclass_num) values ('%s', '%s')" % (str1, str(self.fsetdict[key])))
+        file.close()  # new modify
